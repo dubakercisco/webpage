@@ -1,0 +1,222 @@
+<html>
+<head>
+<link rel="stylesheet" href="css/all.css">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    user-select: none;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: white;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(#040e18, #2c73ab);
+    font-size: 1.7em;
+    overflow: hidden;
+}
+
+body.error {
+    background: linear-gradient(#040e18, red);
+}
+
+.large.button-row .button{
+    width: 20vh;
+    height: 20vh;
+    font-size: 2.5em;
+}
+
+.small.button-row .button{
+    width: 12vh;
+    height: 12vh;
+}
+
+.button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 1.2em;
+}
+
+.filled-blue {
+    background: #a0e1ff
+}
+
+.filled-red {
+    background: red;
+}
+
+.filled-green {
+    background: #47c000;
+}
+
+.outlined-blue {
+    background: transparent;
+    border: 2px solid #a0e1ff;
+}
+
+.outlined-red {
+    background: transparent;
+    border: 2px solid #a0e1ff;
+}
+
+.button-row {
+    margin: 5% 0;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.button-row .button {
+    margin: 0 4vw;
+}
+
+.header {
+    padding: 3vh;
+    text-align: center;
+}
+
+.button-row.large .button-text {
+    margin-top: 2vh;
+    text-align: center;
+}
+
+.button-row.small .button-text {
+    margin-top: 1.5vh;
+    text-align: center;
+    font-size: 0.8em;
+}
+
+.button:active {
+    opacity: 80%;
+}
+
+.right-aligned {
+    position: absolute;
+    right: 0;
+}
+
+.button-group {
+    display:flex;
+    flex-direction: row;
+}
+
+.button-group .button {
+    margin: 0 2vw;
+}
+
+.header {
+    font-size: 1.5em;
+    margin-top: 0.7vh;
+}
+</style>
+<script src="jsxapi.js"></script>
+</head>
+<body>
+    <div class="header">
+        Meeting controls
+    </div>
+    <div class="large button-row">
+        <div>
+            <div data-action="microphone" class="button filled-blue fas fa-microphone"></div>
+            <div class="button-text">Mute/Unmute Microphone</div>
+        </div>
+        <div>
+            <div data-action="video" class="button filled-blue fa fa-video"></div>
+            <div class="button-text">Start/Stop Video</div>
+        </div>
+        <div>
+            <div class="button filled-green fas fa-share-square"></div>
+            <div class="button-text">Share content video</div>
+        </div>
+    </div>
+    <div class="small button-row">
+        <div>
+            <div data-action="exit-menu" class="button outlined-blue fas fa-times"></div>
+            <div class="button-text">Exit Menu</div>
+        </div>
+        <div>
+            <div data-action="change-layout" class="button outlined-blue fas fa-chalkboard-teacher"></div>
+            <div class="button-text">Change Layout</div>
+        </div>
+        <div>
+            <div data-action="participants" class="button outlined-blue fas fa-users"></div>
+            <div class="button-text">Show Participants</div>
+
+        </div>
+        <div>
+            <div data-action="names" class="button outlined-blue fas fa-address-card"></div>
+            <div class="button-text">Show/Hide Names</div>
+        </div>
+        <div>
+            <div data-action="record" class="button outlined-blue fas fa-circle"></div>
+            <div class="button-text">Start/Stop Recording</div>
+        </div>
+    </div>
+    <div class="small button-row">
+        <div>
+            <div data-action="end" class="button filled-red fas fa-sign-out-alt"></div>
+            <div class="button-text">Leave</div>
+        </div>
+        <div class="right-aligned button-group">
+            <div>
+                <div data-action="volume-down" class="button filled-blue fas fa-volume-down"></div>
+                <div class="button-text"></div>
+            </div>
+            <div>
+                <div data-action="volume-up" class="button filled-blue fas fa-volume-up"></div>
+                <div class="button-text"></div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+
+// find icons at https://fontawesome.com/icons?m=free
+
+const hostname = "192.168.1.232";
+const username = "remotesupport";
+const password = "3DxjP30ZsU";
+
+const actionMap = {
+    'volume-down': () => xapi.command("Audio Volume Decrease"),
+    'volume-up': () => xapi.command("Audio Volume Increase"),
+	'change-layout' : () => xapi.command("Call DTMFSend", {DTMFString: "11"}),
+	'microphone' : () => xapi.command("Call DTMFSend", {DTMFString: "12"}),
+	'video' : () => xapi.command("Call DTMFSend", {DTMFString: "14"}),
+	'exit-menu' : () => xapi.command("Call DTMFSend", {DTMFString: "*"}),
+	'participants' : () => xapi.command("Call DTMFSend", {DTMFString: "16"}),
+	'names' : () => xapi.command("Call DTMFSend", {DTMFString: "102"}),
+	'record' : () => xapi.command("Call DTMFSend", {DTMFString: "15"}),
+	'end' : () => xapi.command("Call Disconnect")
+}
+
+
+let xapi;
+jsxapi.connect(`wss://${hostname}`, { username, password })
+    .on('error', (message) => {
+        document.body.classList.add("error");
+        console.error(message);
+    })
+    .on('ready',  (api) => {
+        xapi = api;
+        document.body.classList.remove("connecting");
+    });
+
+for (const element of document.querySelectorAll("[data-action]")) {
+    element.addEventListener("click", () => {
+        const callback = actionMap[element.dataset.action];
+        if (callback)
+            callback();
+    });
+}
+</script>
+</html>
